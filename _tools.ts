@@ -1,6 +1,6 @@
 import { tool } from "@langchain/core/tools"
 import { z } from "zod"
-import { PRODUCTS_DATA } from "./products"
+import { PRODUCTS_DATA } from "./data/products"
 
 const productSearchTool = tool(
   async ({ query, category }: { query?: string; category?: string }) => {

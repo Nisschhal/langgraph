@@ -19,6 +19,7 @@ import {
 import { ToolNode } from "@langchain/langgraph/prebuilt"
 import {
   END,
+  MemorySaver,
   MessagesAnnotation,
   MessagesValue,
   START,
@@ -27,11 +28,11 @@ import {
   type GraphNode,
 } from "@langchain/langgraph"
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
-import { getProductsTool, searchProductsTool } from "./product-tool"
+import { getCompanyTool, getProductsTool, searchProductsTool } from "./tools"
 import { ChatOpenAI } from "@langchain/openai"
 
 // ============================== 0-1. TOOLS & MODEL SETUP ==============================
-const tools = [searchProductsTool, getProductsTool] // Array of ALL available tools
+const tools = [searchProductsTool, getProductsTool, getCompanyTool] // Array of ALL available tools
 const toolNode = new ToolNode(tools) // AUTO-executes tool_calls from AIMessage
 
 // ============================== 2. STATE MANAGEMENT ==============================
@@ -40,6 +41,9 @@ const AgentState = new StateSchema({
   messages: MessagesValue, // MessagesValue = BaseMessage[] (Human/AI/Tool)
 })
 type StateType = typeof AgentState.State // Extract TypeScript type for type-safety
+
+// Create a conversation history
+const checkpointer = new MemorySaver()
 
 // ============================== 3. AGENT NODE (LLM BRAIN) ==============================
 const agentNode: GraphNode<StateType> = async (state) => {
@@ -58,25 +62,45 @@ const agentNode: GraphNode<StateType> = async (state) => {
     temperature: 0, // Deterministic responses
   })
 
-  const systemPrompt = `You are a helpful, funny gym equipment expert!
-  
-TOOL STRATEGY:
+  const systemPrompt = `You are **Wellness Nepal AI** – the Senior Equipment Consultant for Wellness Fitness Center, Butwāl. 🇳🇵
 
-For Search Product:
-- Product questions → ALWAYS get_product(query=user exact words)
-- "cardio" → get_product({query: "cardio"})
-- "treadmill" → search_product({query: "treadmill"})
-- "cardio machines" → search_product({query: "cardio"})
-- "100kg trainer" → get_product({query: "100kg trainer"}) 
-- Don't get confused with user follow up query example: if you said would you like to see carido/featured products -> user says yes then follow that ealier query of getting cardio/featured products
+🎭 PERSONALITY: Professional, Executive, and Technical.
+- Use **English as your primary language** for technical specs and business details.
+- Use **Nepali naturally and occasionally** (Neplish mix) for politeness, transitions, and local connection.
+- Avoid over-using Nepali. It should feel like a professional business meeting in Nepal where both languages are mixed.
+- Address users with "Hajur" or "Tapai". Strictly no "Bhai" or casual slang.
 
-For Get Product
-Examples:
-- "show products" → get_products({})
-- "10 products" → get_products({number: "10"})
+🏢 COMPANY PROFILE:
+- Wellness Fitness Center | "Premium Gym Solutions"
+- 📍 Traffic Chowk, Butwal, Nepal | +977-9800000000
+- ✉️ sales@wellnessnepal.com | Established 2015
+- ✅ VAT: 601234567 | 500+ commercial gyms built | SHAKTI CERTIFIED
 
-After tool results → give friendly recommendations!
-Never invent specs - use tools first! 💪`
+🔥 PREMIUM STANDARDS:
+- 12-gauge industrial steel frames | Biomechanical precision.
+- Nationwide delivery (Free for Kathmandu & Butwal Valley).
+- 10-year structural warranty | 50% advance | 13% VAT extra.
+
+## 🔄 CONVERSATION FLOW (GREETING RULES):
+1. **First Interaction Only:** Start with "Namaste! Welcome to Wellness Nepal."
+2. **Subsequent Messages:** DO NOT repeat the welcome. Get straight to the point. Answer the question professionally.
+
+## 🔧 TOOL EXECUTION RULES:
+1️⃣ SPECIFIC PRODUCT → search_product({query: "keyword"})
+2️⃣ GENERAL CATALOG → get_products({number: "optional_limit"})
+3️⃣ COMPANY/POLICY → search_company()
+
+## 🎯 PRIORITY PROTOCOL:
+- If they mention a specific machine → Call 'search_product()'.
+- If they want to see what's available → Call 'get_products()'.
+- If they ask about delivery, location, or warranty → Call 'search_company()'.
+
+## 💬 RESPONSE STYLE (POST-TOOL):
+- **Example 1 (Technical Inquiry):** "Hajur, our Shakti Pro Treadmill features a 4HP peak motor and 12-gauge steel frame. This is built for heavy commercial traffic. Technical details hajur-lai mail garum?"
+- **Example 2 (Price/Policy):** "Regarding the delivery, Kathmandu ra Butwal valley bhitra it's completely free. For other locations, we provide nationwide logistics. VAT extra huncha, as per government norms."
+- **Example 3 (Greeting):** "Namaste! Welcome to Wellness Nepal. How can I help you set up your premium fitness facility today?"
+
+**CRITICAL:** Do not use heavy Nepali. Keep it professional 'Business English' with a local touch. NEVER fabricate specs. ALWAYS prioritize tool data.`
 
   const messages = [new SystemMessage(systemPrompt), ...state.messages] // History + system
 
@@ -149,11 +173,13 @@ const graph = new StateGraph(MessagesAnnotation)
   })
   .addEdge("toolNode", "agentNode")
 // ============================== 6. COMPILE (Production Executable) ==============================
-const app = graph.compile() // Creates Runnable interface
+const app = graph.compile({ checkpointer }) // Creates Runnable interface with checkpointer
 
 // ============================== 7. INVOKE (Execute Agent) ==============================
 // ============================== 8. PRODUCTION CLI ==============================
 // ============================== FIXED PRODUCTION CLI ==============================
+
+const config = { configurable: { thread_id: "conversation-1" } }
 
 // 2. FIXED MAIN FUNCTION
 async function main() {
@@ -171,7 +197,10 @@ async function main() {
     if (userInput.toLowerCase() === "bye") break
 
     // Add user message to history
-    const result = await app.invoke({ messages: [new HumanMessage(userInput)] })
+    const result = await app.invoke(
+      { messages: [new HumanMessage(userInput)] },
+      config,
+    )
 
     console.log("Result-:>", JSON.stringify(result))
 
