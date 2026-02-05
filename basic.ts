@@ -12,9 +12,12 @@
  */
 import readline from "node:readline/promises" // CLI input
 import {
+  AIMessage,
+  AIMessageChunk,
   HumanMessage,
   SystemMessage,
-  type AIMessage,
+  ToolMessage,
+  ToolMessageChunk,
 } from "@langchain/core/messages"
 import { ToolNode } from "@langchain/langgraph/prebuilt"
 import {
@@ -60,54 +63,54 @@ const agentNode: GraphNode<StateType> = async (state) => {
     apiKey: process.env.OPENAI_API_KEY!, // Required: Environment variable
     model: "gpt-4o-mini", // Feb 2026 model (fast + capable)
     temperature: 0, // Deterministic responses
+    streaming: true,
   })
 
   const systemPrompt = `You are **Wellness Nepal AI** – the Senior Equipment Consultant for Wellness Fitness Center, Butwāl. 🇳🇵
 
-🎭 PERSONALITY: Professional, Executive, and Technical.
-- Use **English as your primary language** for technical specs and business details.
-- Use **Nepali naturally and occasionally** (Neplish mix) for politeness, transitions, and local connection.
-- Avoid over-using Nepali. It should feel like a professional business meeting in Nepal where both languages are mixed.
-- Address users with "Hajur" or "Tapai". Strictly no "Bhai" or casual slang.
+  🎭 PERSONALITY: Professional, Executive, and Technical.
+  - Use **English as your primary language** for technical specs and business details.
+  - Use **Nepali naturally and occasionally** (Neplish mix) for politeness, transitions, and local connection.
+  - Avoid over-using Nepali. It should feel like a professional business meeting in Nepal where both languages are mixed.
+  - Address users with "Hajur" or "Tapai". Strictly no "Bhai" or casual slang.
 
-🏢 COMPANY PROFILE:
-- Wellness Fitness Center | "Premium Gym Solutions"
-- 📍 Traffic Chowk, Butwal, Nepal | +977-9800000000
-- ✉️ sales@wellnessnepal.com | Established 2015
-- ✅ VAT: 601234567 | 500+ commercial gyms built | SHAKTI CERTIFIED
+  🏢 COMPANY PROFILE:
+  - Wellness Fitness Center | "Premium Gym Solutions"
+  - 📍 Traffic Chowk, Butwal, Nepal | +977-9800000000
+  - ✉️ sales@wellnessnepal.com | Established 2015
+  - ✅ VAT: 601234567 | 500+ commercial gyms built | SHAKTI CERTIFIED
 
-🔥 PREMIUM STANDARDS:
-- 12-gauge industrial steel frames | Biomechanical precision.
-- Nationwide delivery (Free for Kathmandu & Butwal Valley).
-- 10-year structural warranty | 50% advance | 13% VAT extra.
+  🔥 PREMIUM STANDARDS:
+  - 12-gauge industrial steel frames | Biomechanical precision.
+  - Nationwide delivery (Free for Kathmandu & Butwal Valley).
+  - 10-year structural warranty | 50% advance | 13% VAT extra.
 
-## 🔄 CONVERSATION FLOW (GREETING RULES):
-1. **First Interaction Only:** Start with "Namaste! Welcome to Wellness Nepal."
-2. **Subsequent Messages:** DO NOT repeat the welcome. Get straight to the point. Answer the question professionally.
+  ## 🔄 CONVERSATION FLOW (GREETING RULES):
+  1. **First Interaction Only:** Start with "Namaste! Welcome to Wellness Nepal."
+  2. **Subsequent Messages:** DO NOT repeat the welcome. Get straight to the point. Answer the question professionally.
 
-## 🔧 TOOL EXECUTION RULES:
-1️⃣ SPECIFIC PRODUCT → search_product({query: "keyword"})
-2️⃣ GENERAL CATALOG → get_products({number: "optional_limit"})
-3️⃣ COMPANY/POLICY → search_company()
+  ## 🔧 TOOL EXECUTION RULES:
+  1️⃣ SPECIFIC PRODUCT → search_product({query: "keyword"})
+  2️⃣ GENERAL CATALOG → get_products({number: "optional_limit"})
+  3️⃣ COMPANY/POLICY → search_company()
 
-## 🎯 PRIORITY PROTOCOL:
-- If they mention a specific machine → Call 'search_product()'.
-- If they want to see what's available → Call 'get_products()'.
-- If they ask about delivery, location, or warranty → Call 'search_company()'.
+  ## 🎯 PRIORITY PROTOCOL:
+  - If they mention a specific machine → Call 'search_product()'.
+  - If they want to see what's available → Call 'get_products()'.
+  - If they ask about delivery, location, or warranty → Call 'search_company()'.
 
-## 💬 RESPONSE STYLE (POST-TOOL):
-- **Example 1 (Technical Inquiry):** "Hajur, our Shakti Pro Treadmill features a 4HP peak motor and 12-gauge steel frame. This is built for heavy commercial traffic. Technical details hajur-lai mail garum?"
-- **Example 2 (Price/Policy):** "Regarding the delivery, Kathmandu ra Butwal valley bhitra it's completely free. For other locations, we provide nationwide logistics. VAT extra huncha, as per government norms."
-- **Example 3 (Greeting):** "Namaste! Welcome to Wellness Nepal. How can I help you set up your premium fitness facility today?"
+  ## 💬 RESPONSE STYLE (POST-TOOL):
+  - **Example 1 (Technical Inquiry):** "Hajur, our Shakti Pro Treadmill features a 4HP peak motor and 12-gauge steel frame. This is built for heavy commercial traffic. Technical details hajur-lai mail garum?"
+  - **Example 2 (Price/Policy):** "Regarding the delivery, Kathmandu ra Butwal valley bhitra it's completely free. For other locations, we provide nationwide logistics. VAT extra huncha, as per government norms."
+  - **Example 3 (Greeting):** "Namaste! Welcome to Wellness Nepal. How can I help you set up your premium fitness facility today?"
 
-**CRITICAL:** Do not use heavy Nepali. Keep it professional 'Business English' with a local touch. NEVER fabricate specs. ALWAYS prioritize tool data.`
-
+  **CRITICAL:** Do not use heavy Nepali. Keep it professional 'Business English' with a local touch. NEVER fabricate specs. ALWAYS prioritize tool data.`
   const messages = [new SystemMessage(systemPrompt), ...state.messages] // History + system
 
   const modelWithTools = model.bindTools(tools) // CRITICAL: LLM learns tool schemas
   const response = await modelWithTools.invoke(messages) // LLM generates AIMessage
 
-  console.log("🧠 Agent response:", JSON.stringify(response, null, 2))
+  // console.log("🧠 Agent response:", JSON.stringify(response, null, 2))
   return { messages: [response] } // Append to state.messages array
 }
 
@@ -128,7 +131,7 @@ const shouldContinue = (state: StateType): "toolNode" | "__end__" => {
     console.log("🚪 Router: No tool_calls → END")
     return "__end__"
   }
-  console.log("Router last message:-----", lastMessage)
+  // console.log("Router last message:-----", lastMessage)
 
   const hasToolCalls = ((lastMessage as AIMessage).tool_calls?.length ?? 0) > 0
   console.log(
@@ -163,7 +166,7 @@ const shouldContinue = (state: StateType): "toolNode" | "__end__" => {
 //   .addEdge("toolNode", "agentNode") // Tools finish → Agent re-thinks with results
 
 // / ✅ FIXED
-const graph = new StateGraph(MessagesAnnotation)
+const graph = new StateGraph(AgentState)
   .addNode("agentNode", agentNode)
   .addNode("toolNode", toolNode)
   .addEdge(START, "agentNode")
@@ -182,47 +185,74 @@ const app = graph.compile({ checkpointer }) // Creates Runnable interface with c
 const config = { configurable: { thread_id: "conversation-1" } }
 
 // 2. FIXED MAIN FUNCTION
+// ============================== FIXED MAIN FUNCTION ==============================
+// ─── CLI with real token-by-token streaming ─────────────────────────────
 async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
+    terminal: true,
   })
 
-  console.log("🚀 Gym Product Agent (type 'bye' to exit)")
-
-  // Keep track of history so the agent has memory
+  console.log("Wellness Nepal AI  (type 'exit' or 'bye' to quit)\n")
 
   while (true) {
-    const userInput = await rl.question("\nYou: ")
-    if (userInput.toLowerCase() === "bye") break
+    const input = await rl.question("You: ")
 
-    // Add user message to history
-    const result = await app.invoke(
-      { messages: [new HumanMessage(userInput)] },
-      config,
+    if (["exit", "bye"].includes(input.trim().toLowerCase())) {
+      console.log("Goodbye!")
+      break
+    }
+
+    if (!input.trim()) continue
+
+    process.stdout.write("AI : ")
+
+    // ─── Stream from graph using "values" mode (simplest for CLI) ───────
+    // ─── This is the recommended way for token-by-token ────────
+    const stream = await app.stream(
+      { messages: [new HumanMessage(input)] },
+      {
+        ...config,
+        streamMode: "messages", // ← streams (messageChunk, nodeName) tuples
+      },
     )
 
-    console.log("Result-:>", JSON.stringify(result))
+    // for await (const chunk of stream) {
+    //   // With streamMode: "messages", chunk is [message, nodeName]
+    //   const [message, tags] = chunk
+    //   // console.log("incoming chunk", chunk)
+    //   process.stdout.write(message.content as string)
+    // }
 
-    try {
-      console.log("Result last message", result.messages.at(-1))
-      console.log("🤖 Agent:")
-      console.log("Result last message", result.messages.at(-1)?.content)
-    } catch (error) {
-      console.error("❌ Error:", error)
+    // Optional: show tool results when they arrive
+
+    for await (const chunk of stream) {
+      const [message, tags] = chunk
+      // console.log(chunk)
+
+      if (message instanceof AIMessageChunk) {
+        process.stdout.write(message.content as string)
+      }
+
+      /**
+       * 
+      // tool does it task in one go so no ToolMessageChunk
+      if (message instanceof ToolMessage) {
+        console.log(chunk, "kdjaflksdfjs")
+        console.log(
+          (`some product fomr tool-------` + message.content) as string,
+        )
+      }
+      */
     }
   }
+
+  console.log("\n" + "─".repeat(70))
   rl.close()
 }
 
-async function streamWordByWord(text: string) {
-  if (!text || typeof text !== "string") return
-  const words = text.split(" ")
-  for (const word of words) {
-    process.stdout.write(word + " ")
-    await new Promise((res) => setTimeout(res, 30))
-  }
-  process.stdout.write("\n")
-}
-
-main().catch(console.error)
+main().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

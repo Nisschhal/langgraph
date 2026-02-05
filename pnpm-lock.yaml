@@ -16,13 +16,16 @@ importers:
         version: 2.1.14(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))
       '@langchain/langgraph':
         specifier: ^1.1.2
-        version: 1.1.2(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))(zod@4.3.6)
+        version: 1.1.2(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))(react@19.2.4)(zod@4.3.6)
       '@langchain/openai':
         specifier: ^1.2.4
         version: 1.2.4(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
+      lucide-react:
+        specifier: ^0.563.0
+        version: 0.563.0(react@19.2.4)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -173,6 +176,11 @@ packages:
       openai:
         optional: true
 
+  lucide-react@0.563.0:
+    resolution: {integrity: sha512-8dXPB2GI4dI8jV4MgUDGBeLdGk8ekfqVZ0BdLcrRzocGgG75ltNEmWS+gE7uokKF/0oSUuczNDT+g9hFJ23FkA==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   mustache@4.2.0:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
     hasBin: true
@@ -212,6 +220,10 @@ packages:
   p-timeout@7.0.1:
     resolution: {integrity: sha512-AxTM2wDGORHGEkPCt8yqxOTMgpfbEHqF51f/5fJCmwFC3C/zNcGT63SymH2ttOAaiIws2zVg4+izQCjrakcwHg==}
     engines: {node: '>=20'}
+
+  react@19.2.4:
+    resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
+    engines: {node: '>=0.10.0'}
 
   semver@7.7.3:
     resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
@@ -278,19 +290,20 @@ snapshots:
       '@langchain/core': 1.1.18(openai@6.17.0(zod@4.3.6))
       uuid: 10.0.0
 
-  '@langchain/langgraph-sdk@1.5.5(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))':
+  '@langchain/langgraph-sdk@1.5.5(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))(react@19.2.4)':
     dependencies:
       p-queue: 9.1.0
       p-retry: 7.1.1
       uuid: 13.0.0
     optionalDependencies:
       '@langchain/core': 1.1.18(openai@6.17.0(zod@4.3.6))
+      react: 19.2.4
 
-  '@langchain/langgraph@1.1.2(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))(zod@4.3.6)':
+  '@langchain/langgraph@1.1.2(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))(react@19.2.4)(zod@4.3.6)':
     dependencies:
       '@langchain/core': 1.1.18(openai@6.17.0(zod@4.3.6))
       '@langchain/langgraph-checkpoint': 1.0.0(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))
-      '@langchain/langgraph-sdk': 1.5.5(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))
+      '@langchain/langgraph-sdk': 1.5.5(@langchain/core@1.1.18(openai@6.17.0(zod@4.3.6)))(react@19.2.4)
       '@standard-schema/spec': 1.1.0
       uuid: 10.0.0
       zod: 4.3.6
@@ -375,6 +388,10 @@ snapshots:
     optionalDependencies:
       openai: 6.17.0(zod@4.3.6)
 
+  lucide-react@0.563.0(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+
   mustache@4.2.0: {}
 
   openai@6.17.0(zod@4.3.6):
@@ -402,6 +419,8 @@ snapshots:
       p-finally: 1.0.0
 
   p-timeout@7.0.1: {}
+
+  react@19.2.4: {}
 
   semver@7.7.3: {}
 

@@ -1,5 +1,5 @@
 import { tool } from "@langchain/core/tools"
-import { COMPANY_DATA } from "../next-chat/data"
+import { COMPANY_DATA } from "../data"
 
 export const getCompanyTool = tool(
   async () => {

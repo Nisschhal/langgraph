@@ -14,7 +14,7 @@ import {
 import { ToolNode } from "@langchain/langgraph/prebuilt" // Auto tool executor
 import readline from "node:readline/promises" // CLI input
 import dotenv from "dotenv" // Environment vars
-import { PRODUCTS_DATA } from "./data/products"
+import { PRODUCTS_DATA } from "./next-chat/data/products"
 
 dotenv.config() // Load .env file
 

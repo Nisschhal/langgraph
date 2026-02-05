@@ -1,5 +1,5 @@
 import { tool } from "@langchain/core/tools"
-import { PRODUCTS_DATA } from "../next-chat/data"
+import { PRODUCTS_DATA } from "../data"
 import z from "zod"
 
 type ProductToolProps = {
